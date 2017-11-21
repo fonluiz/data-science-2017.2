@@ -1,0 +1,116 @@
+---
+title: "resolução lab 2"
+author: "Luiz Fonseca"
+date: "18 de novembro de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Antes de começar vamos ver os valores faltantes
+
+```{r}
+library(tidyverse)
+library(Amelia)
+library(reshape2)
+
+dadosEleicoes <- read_csv("~/Faculdade/data-science-2017.2/dadosEleicoes.csv",
+                          col_types = cols(numero_cadidato = col_character(), 
+                                           sequencial_candidato = col_character()))
+
+
+missmap(dadosEleicoes, main = "Valores em Falta vs Valores Observados")
+```
+
+Vemos que em 5 variáveis, há muitos valores faltantes. Vamos excluir essas variáveis. 
+
+```{r}
+dados.modelo <- dadosEleicoes %>%
+  select(-`recursos_de_outros_candidatos/comites`, -recursos_de_partidos, -recursos_de_pessoas_juridicas, -recursos_de_pessoas_físicas, -recursos_proprios, 
+         -cargo, -sequencial_candidato, -numero_cadidato, -setor_economico_receita, 
+         -setor_economico_despesa, -nome)
+```
+
+# Um modelo de regressão múltipla com todas as variáveis é plausível para explicar a variação em y (votos)? Em que grau?
+
+```{r}
+model.fit <- lm(formula = votos ~ ., dados.modelo, na.action = na.omit)
+summary(model.fit)
+```
+
+A estatística F é 52.75 e o tamanho da amostra (n = 5113) é consideravelmente maior que o número de preditores (p = 19), podemos inferir que há sim uma relação entre pelo menos uma das variáveis de entrada e a variável alvo.
+
+Alguns p-valores estão altos e outros estão bem baixos, ou seja, algumas variáveis podem ser consideradas boas preditoras.
+
+# Todas as variáveis são úteis para o modelo de regressão?
+Existem vários algoritmos de seleção de váriáveis: forward selection, backward selection, mixed selection, busca exaustiva, entre outros. O método que será utilizado é o forward selection.
+
+```{r, echo=FALSE}
+library(leaps)
+
+regsubsets.out <-
+    regsubsets(votos ~ .,
+               data = dados.modelo,
+               nbest = 1,       # 1 único modelo para cada cojunto de preditores
+               nvmax = NULL,    # NULL para não haver limite no número de variáveis preditoras
+               force.in = NULL, force.out = NULL,
+               method = "forward")
+
+summary.out <- summary(regsubsets.out)
+```
+
+variáveis forward selection: partidoPRB, quantidade_doacoes, quantidade_doadores, total_receita, media_receita, quantidade_despesas, quantidade_fornecedores, total_despesa media_despesa, sexoMASCULINO, grauLÊ E ESCREVE, grauSUPERIOR COMPLETO.
+
+# Se a resposta para a pergunta anterior foi não, construa um novo modelo sem essas variáveis e o compare ao modelo com todas as variáveis (e.g. em termos de R2 e RSE).
+
+```{r}
+variaveis.selecionadas <- dados.modelo %>% 
+  select(votos, quantidade_doacoes, quantidade_doadores, total_receita, media_receita, 
+         quantidade_despesas, quantidade_fornecedores, total_despesa, media_despesa, sexo,
+         grau)
+
+best.model <- lm(formula = votos ~ ., variaveis.selecionadas, na.action = na.omit)
+summary(best.model)
+```
+
+O r² deu menor mais isso ja era esperado. Quanto mais variaveis mais o modelo se ajusta aos dados de treino, mas não necessariamente aos dados de teste.
+
+# Analise os plots de resíduos de cada variável e veja se algum (um ou mais) deles indica não aleatoriedade dos erros.
+
+```{r}
+variaveis.selecionadas <- na.omit(variaveis.selecionadas)
+variaveis.selecionadas$residuals <- residuals(best.model)
+
+variable.names <- c(names(variaveis.selecionadas)[2:11], "residuals")
+plotDF <- melt(variaveis.selecionadas[, variable.names], id="residuals")
+
+ggplot(plotDF, aes(x=value, y=residuals)) + 
+  geom_point(color="slateblue") + facet_wrap(~ variable)
+```
+Analisando os plots dos resíduos de cada variável, identifica-se aleatoriedade em todos os gráficos e uma simetria dos pontos em torno do valor 0. Então, concluímos que nenhuma variável tende a superestimar ou subestimar a variável de resposta.
+
+# Separando em treino e teste
+
+```{r}
+sample <- sample.int(n = nrow(variaveis.selecionadas), size = floor(.8*nrow(variaveis.selecionadas)), replace = F)
+
+train <- variaveis.selecionadas[sample, ]
+test  <- variaveis.selecionadas[-sample, ]
+
+rmse <- function(error) {
+    sqrt(mean(error^2))
+}
+
+model <- lm(formula = votos ~ ., train, na.action = na.omit)
+
+prediction <- predict(model, test)
+rmse <- rmse(prediction - test$votos)
+
+# x <- test %>% select(votos)
+# x$prediction <- prediction
+
+format(rmse, scientific = F)
+```
+
