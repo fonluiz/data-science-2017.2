@@ -94,23 +94,35 @@ Analisando os plots dos resíduos de cada variável, identifica-se aleatoriedade
 # Separando em treino e teste
 
 ```{r}
-sample <- sample.int(n = nrow(variaveis.selecionadas), size = floor(.8*nrow(variaveis.selecionadas)), replace = F)
+# setwd("~/Faculdade/data-science-2017.2/results")
+iterations = 20
+totalRMSE = 0
 
-train <- variaveis.selecionadas[sample, ]
-test  <- variaveis.selecionadas[-sample, ]
-
-rmse <- function(error) {
-    sqrt(mean(error^2))
+for(i in 1:iterations) {
+  sample <- sample.int(n = nrow(variaveis.selecionadas), size = floor(.8*nrow(variaveis.selecionadas)), replace = F)
+  
+  train <- variaveis.selecionadas[sample, ]
+  test  <- variaveis.selecionadas[-sample, ]
+  
+  rmse <- function(error) {
+      sqrt(mean(error^2))
+  }
+  
+  model <- lm(formula = votos ~ ., train, na.action = na.omit)
+  
+  prediction <- predict(model, test)
+  rmse <- rmse(prediction - test$votos)
+  
+  totalRMSE = totalRMSE + rmse
+  
+  test$prediction <- prediction
+  
+  # write.csv(train, paste("train.csv", i, sep = "-"))
+  # write.csv(test, paste("test.csv", i, sep = "-"))
 }
 
-model <- lm(formula = votos ~ ., train, na.action = na.omit)
+meanRMSE = totalRMSE/iterations
+format(meanRMSE, scientific = F)
 
-prediction <- predict(model, test)
-rmse <- rmse(prediction - test$votos)
-
-# x <- test %>% select(votos)
-# x$prediction <- prediction
-
-format(rmse, scientific = F)
 ```
 
