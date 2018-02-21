@@ -1,0 +1,120 @@
+---
+title: "Tutorial Caret para classificação"
+author: "Luiz Fonseca"
+date: "21 de fevereiro de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Regressão logística
+
+```{r}
+library(caret)
+data(GermanCredit)
+ 
+# Separa os dados em treino e teste
+dataPartition <- createDataPartition(y = GermanCredit$Class, p=0.75, list=FALSE)
+# Se o y for um vector de factor a divisão é feita tentando balancear a distribuição de classes de # y dentro das partições.
+
+treino <- GermanCredit[ dataPartition, ]
+teste <- GermanCredit[ -dataPartition, ]
+
+# variáveis envolvidas no modelo
+# Classe (bom ou ruim), idade, se é trabalhador estrageiro, se possui bens imobiliários, se possui casa, se possui um histórico de crédito ruim. 
+formula = as.formula(Class ~ Age + ForeignWorker + Property.RealEstate + Housing.Own + CreditHistory.Critical)
+ 
+# utilize o método glm (generalized linear model)
+modelo1 <- train(formula,
+                 data = treino,
+                 method="glm",
+                 family="binomial",      # se a variável for binária
+                 na.action = na.omit)
+
+# outra opção é utilizar a função glm() 
+modelo2 <- glm(formula = formula, data=treino, family="binomial")
+
+# O sumário é o mesmo, mas o objeto criado é diferente
+summary(modelo1)
+summary(modelo2)
+
+class(modelo1) != class(modelo2)
+```
+
+## Árvore de decisão
+
+```{r}
+arvore1 <- train(formula,
+                 data=treino,
+                 method = "rpart",
+                 cp=0.001,  # parâmetro de complexidade
+                 maxdepth=20)
+
+arvore1
+
+# outra opção é usar a função rpart do pacote rpart
+library(rpart)
+library(rpart.plot)	
+
+control <- rpart.control(maxdepth=20,
+                         minsplit=20,
+                         cp=0.001)
+ 
+arvore2 <- rpart(formula, data=treino, control = control)
+
+# Usando o rpart você pode visualizar a árvore
+prp(arvore2)
+```
+
+## Boosting (Adaboost)
+
+```{r}
+modelo <- train(formula,
+                data=treino,
+                method = "adaboost")
+
+modelo
+```
+
+## Algumas métricas de avaliação
+
+Algumas métricas conhecidas para avaliarmos a eficácia de um modelo são 
+
+<ul>
+<li>Accuracy (acurácia)</li>
+<li>Precision</li>
+<li>Recall</li>
+</ul>
+
+Essas métricas são definidas em termos de Verdadeiros Positivos (TP), Verdadeiros Negativos (TN) Falsos Positivos (FP) e Falsos Negativos (FN).
+
+Acurácia = (TP + TN)/(TP + TN + FP + FN) 
+<i> Nos diz a proporção de observações corretamente classificadas. </i>
+
+Precision =  TP / (TP + FP)
+<i> Diz respeito a quantas das observaçoes preditas como positivas são realmente positivas </i>
+
+Recall = TP / (TP + FN)
+<i>  Diz respeito a quantas das observaçoes positivas foram corretamente classificadas <i>
+
+```{r}
+library(dplyr)
+teste$predicao <- predict(modelo, teste)
+
+TP <- teste %>% filter(Class == "Good", predicao == "Good") %>% nrow()
+TN <- teste %>% filter(Class == "Bad" , predicao == "Bad" ) %>% nrow()
+FP <- teste %>% filter(Class == "Bad" , predicao == "Good") %>% nrow() 
+FN <- teste %>% filter(Class == "Good", predicao == "Bad" ) %>% nrow()
+
+accuracy <- (TP + TN)/(TP + TN + FP + FN) 
+precision <- TP / (TP + FP)
+recall <- TP / (TP + FN)
+
+accuracy
+precision
+recall
+```
+
+Para este caso da concessionária de crédito, é melhor (para o banco) termos um FP do que um FN. Então a métrica de precision é muito importante nesse caso.
