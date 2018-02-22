@@ -7,10 +7,10 @@ dados_cepesp <- read_csv("~/Downloads/TSE_DEPUTADO_FEDERAL_UF_CANDIDATO_2014.csv
 names(dados_cepesp) <- tolower(names(dados_cepesp))
 colnames(dados_cepesp)[6] <- "nome"
 colnames(dados_cepesp)[3] <- "UF"
-colnames(dados_cepesp)[6] <- "numero_cadidato"
+colnames(dados_cepesp)[7] <- "numero_cadidato"
 
-dados_treino <- inner_join(eleicoes2014, dados_cepesp, by=c("nome", "numero", "UF")) 
-dados_teste <- inner_join(eleicoes2014_test, dados_cepesp, by=c("nome", "numero", "UF"))
+dados_treino <- inner_join(eleicoes2014, dados_cepesp, by=c("nome", "numero_cadidato", "UF")) 
+dados_teste <- inner_join(eleicoes2014_test, dados_cepesp, by=c("nome", "numero_cadidato", "UF"))
 
 dados_treino$recursos_de_outros_candidatos.comites[is.na(dados_treino$recursos_de_outros_candidatos.comites)] <- 0
 dados_treino$recursos_de_partidos[is.na(dados_treino$recursos_de_partidos)] <- 0

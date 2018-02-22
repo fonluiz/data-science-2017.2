@@ -1,0 +1,112 @@
+---
+title: "Lab 3"
+author: "Luiz Fonseca"
+date: "21 de fevereiro de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(tidyverse)
+library(caret)
+dados_teste <- read_csv("~/Faculdade/data-science-2017.2/lab-3/dados_teste.csv")
+
+treino <- read_csv("~/Faculdade/data-science-2017.2/lab-3/train.csv")
+teste <- read_csv("~/Faculdade/data-science-2017.2/lab-3/test.csv")
+
+eleitos <- treino %>% filter(situacao_final == "eleito") %>% nrow()
+nao_eleitos <- treino %>% filter(situacao_final == "nao_eleito") %>% nrow()
+
+perc_eleitos <- round(eleitos / (eleitos + nao_eleitos), 3)
+perc_naoeleitos <- round(nao_eleitos / (eleitos + nao_eleitos), 3)
+
+input <- treino %>% select(-ID, -nome, -numero_cadidato, -UF, -setor_economico_receita,
+                           -setor_economico_despesa, -descricao_ocupacao)
+
+glm.fit <- train(situacao_final ~ .,
+                 data=input,
+                 method="glm",
+                 family="binomial",
+                 na.action = na.omit)
+
+summary(glm.fit)
+
+dados_teste <- dados_teste %>% mutate(
+  situacao_final = ifelse(grepl("ELEITO", desc_sit_tot_turno), "eleito", "nao_eleito")
+)
+
+dados_teste <- dados_teste %>% mutate(
+  situacao_final = ifelse(grepl("ELEITO POR", desc_sit_tot_turno), "eleito", "nao_eleito")
+)
+
+eleitos <-  dados_teste %>% filter(situacao_final == "eleito") %>% nrow()
+nao_eleitos <- dados_teste %>% filter(situacao_final == "nao_eleito") %>% nrow()
+
+perc_eleitos <- round(eleitos / (eleitos + nao_eleitos), 3)
+perc_naoeleitos <- round(nao_eleitos / (eleitos + nao_eleitos), 3)
+
+test <- teste %>% select(-votos)
+treino <- treino %>% select(-votos)
+
+write.csv(treino, "train.csv", row.names = F)
+write.csv(teste, "test.csv", row.names = F)
+
+```
+
+
+```{r}
+levels(as.factor(treino$UF))
+levels(as.factor(teste$UF))
+
+setdiff(unique(teste$partido), unique(treino$partido))
+# Partido PCO não tem no teste
+
+setdiff(unique(teste$setor_economico_receita),unique(treino$setor_economico_receita))
+# 7
+
+setdiff(unique(teste$setor_economico_despesa), unique(treino$setor_economico_despesa))
+# 9 não tem
+
+setdiff(unique(teste$sexo), unique(treino$sexo))
+setdiff(unique(teste$grau), unique(treino$grau))
+setdiff(unique(teste$estado_civil), unique(treino$estado_civil))
+setdiff(unique(teste$descricao_ocupacao), unique(treino$descricao_ocupacao))
+# 6 nao aparecem
+
+setdiff(unique(teste$descricao_cor_raca), unique(treino$descricao_cor_raca))
+
+treino <- treino %>% filter(partido != "PCO")
+
+teste <- teste %>% filter(setor_economico_receita != "Impressão de jornais",
+                          setor_economico_receita != "Construção de edifícios",
+                          setor_economico_receita != "Lojas de departamentos ou magazines",
+                          setor_economico_receita != "Fabricação de produtos de papel, cartolina, papel-cartão e papelão ondulado para uso comercial e de escritório",
+                          setor_economico_receita != "Comércio varejista de outros produtos não especificados anteriormente",
+                          setor_economico_receita != "Comércio varejista de materiais de construção em geral",
+                          setor_economico_receita != "Comércio varejista de artigos do vestuário e acessórios")
+
+teste <- teste %>% filter(setor_economico_despesa != "Limpeza em prédios e em domicílios",
+                          setor_economico_despesa != "Comércio varejista de artigos do vestuário e acessórios",
+                          setor_economico_despesa != "Comércio varejista de material elétrico",
+                          setor_economico_despesa != "Reparação e manutenção de equipamentos eletroeletrônicos de uso pessoal e doméstico",
+                          setor_economico_despesa != "Fabricação de artigos de serralheria, exceto esquadrias",
+                          setor_economico_despesa != "Comércio varejista de objetos de arte",
+                          setor_economico_despesa != "Comércio varejista de equipamentos para escritório",
+                          setor_economico_despesa != "Fornecimento de alimentos preparados preponderantemente para empresas",
+                          setor_economico_despesa != "Comércio varejista de fogos de artifício e artigos pirotécnicos")
+
+teste <- teste %>% filter(descricao_ocupacao != "MINISTRO DE ESTADO",
+                          descricao_ocupacao != "TELEFONISTA",
+                          descricao_ocupacao != "BACTERIOLOGISTA E ASSEMELHADOS",
+                          descricao_ocupacao != "AGENCIADOR DE PROPAGANDA",
+                          descricao_ocupacao != "FISCAL DE TRANSPORTE COLETIVO",
+                          descricao_ocupacao != "ATENDENTE DE LANCHONETE E RESTAURANTE")
+
+
+
+```
+

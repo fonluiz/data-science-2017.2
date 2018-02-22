@@ -118,3 +118,9 @@ recall
 ```
 
 Para este caso da concessionária de crédito, é melhor (para o banco) termos um FP do que um FN. Então a métrica de precision é muito importante nesse caso.
+
+```{r}
+# Forma menos trabalhosa de calcular a matriz de confusão
+confusionMatrix(teste$predicao, teste$Class)
+```
+
