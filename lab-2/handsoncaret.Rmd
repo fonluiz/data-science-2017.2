@@ -1,0 +1,157 @@
+---
+title: "Hands On Caret "
+subtitle: "A library for creating predictive models"
+author: "Luiz Fonseca"
+date: "12/07/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Caret is the short for *C*lassification *A*nd *RE*gression *T*raining. It is a complete package that covers all the stages of a pipeline for creating a machine learning predictive model. In this tutorial, I will explain the following topics:
+
+1. How to install caret
+2. How to create a simple model
+3. How to use cross-validation to avoid overfitting
+4. How to add simple preprocessing to your data
+5. How to find the best parameters for your choosen model
+6. How to see the most important features/variables for your model
+7. How to use your model to predict
+
+# Installing
+
+Installing caret is just as installing any other package in R. Just use the code below. If you're using RStudio (which is recommended), you can also install it by clicking in "tools" > "Install Packages..." in the toolbar.
+
+```{r, eval=FALSE}
+install.packages("caret")
+```
+
+# Creating a simple model
+
+We're gonna do that by using the "train()" function. The function "train()" is a core function of caret. As its name suggests, it is used to train a model, that is, to apply an algorithm to a set of data and create a model which represents that dataset.
+
+The train() function has three basic parameters:
+
+1. Formula
+2. Dataset
+3. Method (or algorithm)
+
+The *formula* parameter is where you specify what is your dependent variable (what you want to predict) and independent variables (features). I'll explain more about how to write your formula below. 
+
+The *dataset* is your data. 
+
+In the example below I'm using the mtcars dataset
+
+```{r}
+data(mtcars)
+View(mtcars)
+?mtcars
+
+library(caret)
+
+# modelo de regressão linear simples
+model <- train(mpg ~ wt,
+               data = mtcars,
+               method = "lm")
+
+# modelo de regressão linear múltipla
+model <- train(mpg ~ .,
+               data = mtcars,
+               method = "lm")
+
+# modelo utilizando regressão ridge
+model <- train(mpg ~ .,
+               data = mtcars,
+               method = "ridge") # pode ser 'lasso'
+
+```
+<!-- # K-fold cross-validation -->
+
+<!-- O processo de reamostragem pode ser feito usando k-fold cross-validation, leave-one-out cross-validation ou bootstrapping. -->
+
+<!-- ```{r} -->
+<!-- fitControl <- trainControl(## 10-fold CV -->
+<!--                            method = "cv", # boot", "boot632", "cv", "repeatedcv", "LOOCV", "LGOCV" -->
+<!--                            number = 10, -->
+<!--                            ## repeated ten times -->
+<!--                            repeats = 10) -->
+
+<!-- model.cv <- train(mpg ~ .,  -->
+<!--                data = mtcars, -->
+<!--                method = "lasso", -->
+<!--                trControl = fitControl) -->
+
+<!-- model.cv -->
+<!-- ``` -->
+
+<!-- # Adicionando pre-processamento -->
+
+<!-- ```{r} -->
+<!-- model.cv <- train(mpg ~ .,  -->
+<!--                data = mtcars, -->
+<!--                method = "lasso", -->
+<!--                trControl = fitControl, -->
+<!--                preProcess = c('scale', 'center')) # default: sem pre-processamento -->
+
+<!-- # Center: subtrai a média do valor  -->
+<!-- # scale: normaliza os dados (deixa na mesma escala) -->
+
+<!-- ?train -->
+<!-- model.cv -->
+<!-- ``` -->
+
+<!-- # Encontrando parâmetros do modelo -->
+
+<!-- Podemos testar vários parâmetros para o modelo através da função expand.grid() -->
+
+<!-- O método ridge tende a aproximar os coeficientes das variáveis preditoras de 0, conforme o lambda aumenta. Isso diminui a flexibilidade do modelo, diminuindo também a variância, porém aumentando o BIAS. A ideia por trás da regressão Ridge é encontrar um lambda que gere um trade-off satisfatório entre BIAS e Variância. -->
+
+<!-- ```{r} -->
+<!-- lambdaGrid <- expand.grid(lambda = 10^seq(10, -2, length=100)) -->
+
+<!-- model.cv <- train(mpg ~ .,  -->
+<!--                data = mtcars, -->
+<!--                method = "ridge", -->
+<!--                trControl = fitControl, -->
+<!--                preProcess = c('scale', 'center'), -->
+<!--                tuneGrid = lambdaGrid, -->
+<!--                na.action = na.omit)   #ignora os NAs -->
+
+<!-- model.cv -->
+<!-- ``` -->
+
+<!-- Podemos utilizar uma busca aleatória de parâmetros com search = "random" no trainControl. -->
+
+<!-- ```{r} -->
+<!-- fitControl <- trainControl(## 10-fold CV -->
+<!--                            method = "repeatedcv",  -->
+<!--                            number = 10, -->
+<!--                            repeats = 10, -->
+<!--                            search = "random")  # busca aleatória de hiperparâmetros -->
+
+<!-- model.cv <- train(mpg ~ .,  -->
+<!--                data = mtcars, -->
+<!--                method = "ridge", -->
+<!--                trControl = fitControl, -->
+<!--                preProcess = c('scale', 'center'), -->
+<!--                na.action = na.omit) -->
+
+<!-- model.cv -->
+<!-- ``` -->
+
+<!-- # Importância das variáveis -->
+
+<!-- ```{r} -->
+<!-- ggplot(varImp(model.cv)) -->
+<!-- ``` -->
+
+<!-- # Predições -->
+
+<!-- ```{r} -->
+<!-- predictions <- predict(model.cv, mtcars) -->
+
+<!-- predictions -->
+<!-- ``` -->
+
