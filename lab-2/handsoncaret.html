@@ -386,23 +386,67 @@ summary {
 <h1>Installing</h1>
 <p>Installing caret is just as installing any other package in R. Just use the code below. If you’re using RStudio (which is recommended), you can also install it by clicking in “tools” &gt; “Install Packages…” in the toolbar.</p>
 <pre class="r"><code>install.packages(&quot;caret&quot;)</code></pre>
-<!-- # A função train() -->
-<!-- train() é a função que utilizamos para treinar o modelo. É também uma função núcleo do caret. -->
-<!-- ```{r} -->
-<!-- data(mtcars) -->
-<!-- View(mtcars) -->
-<!-- ?mtcars -->
+</div>
+<div id="creating-a-simple-model" class="section level1">
+<h1>Creating a simple model</h1>
+<p>We’re gonna do that by using the <strong>train()</strong> function. The function <strong>train()</strong> is a core function of caret. As its name suggests, it is used to train a model, that is, to apply an algorithm to a set of data and create a model which represents that dataset.</p>
+<p>The train() function has three basic parameters:</p>
+<ol style="list-style-type: decimal">
+<li>Formula</li>
+<li>Dataset</li>
+<li>Method (or algorithm)</li>
+</ol>
+<p>The <strong>formula</strong> parameter is where you specify what is your dependent variable (what you want to predict) and independent variables (features). I’ll explain more about how to write your formula below.</p>
+<p>The <strong>dataset</strong> parameter is your data.</p>
+<p>The <strong>method</strong> parameter is a string specifying which classification or regression model to use.</p>
+<p>In this tutorial I’m using the mtcars dataset. It is one of the built-in R datasets. Below, there is an explanation about this dataset:</p>
+<div id="motor-trend-car-road-tests-mtcars" class="section level3">
+<h3>Motor Trend Car Road Tests (mtcars)</h3>
+<div id="description" class="section level4">
+<h4>Description</h4>
+<p>The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models).</p>
+<p>Format A data frame with 32 observations on 11 variables.</p>
+<ol style="list-style-type: decimal">
+<li>mpg Miles/(US) gallon</li>
+<li>cyl Number of cylinders</li>
+<li>disp Displacement (cu.in.)</li>
+<li>hp Gross horsepower</li>
+<li>drat Rear axle ratio</li>
+<li>wt Weight (1000 lbs)</li>
+<li>qsec 1/4 mile time</li>
+<li>vs V/S</li>
+<li>am Transmission (0 = automatic, 1 = manual)</li>
+<li>gear Number of forward gears</li>
+<li>carb Number of carburetors</li>
+</ol>
+<p>let’s take a look on the dataframe.</p>
+<pre class="r"><code>data(mtcars)    # Load the dataset
+head(mtcars)    </code></pre>
+<pre><code>##                    mpg cyl disp  hp drat    wt  qsec vs am gear carb
+## Mazda RX4         21.0   6  160 110 3.90 2.620 16.46  0  1    4    4
+## Mazda RX4 Wag     21.0   6  160 110 3.90 2.875 17.02  0  1    4    4
+## Datsun 710        22.8   4  108  93 3.85 2.320 18.61  1  1    4    1
+## Hornet 4 Drive    21.4   6  258 110 3.08 3.215 19.44  1  0    3    1
+## Hornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2
+## Valiant           18.1   6  225 105 2.76 3.460 20.22  1  0    3    1</code></pre>
+<pre class="r"><code>?mtcars         # Get more information about this dataset </code></pre>
+<p>Now, let’s create regression models to predict how many miles per gallon (mpg) a car model can reach based on the other attributes.</p>
+<p>The <strong>formula</strong> can be written as <strong>x ~ y, z, w</strong> where x is the dependent variable, mpg in our case, and y, z and w are independent variables. If you want to pass all the other attributes you can write it as <strong>x ~ * </strong></p>
+<!-- # ```{r} -->
+<!-- # data(mtcars) -->
+<!-- # View(mtcars) -->
+<!-- # ?mtcars -->
 <!-- library(caret) -->
 <!-- # modelo de regressão linear simples -->
-<!-- model <- train(mpg ~ wt,  -->
+<!-- model <- train(mpg ~ wt, -->
 <!--                data = mtcars, -->
 <!--                method = "lm") -->
 <!-- # modelo de regressão linear múltipla -->
-<!-- model <- train(mpg ~ .,  -->
+<!-- model <- train(mpg ~ ., -->
 <!--                data = mtcars, -->
 <!--                method = "lm") -->
 <!-- # modelo utilizando regressão ridge -->
-<!-- model <- train(mpg ~ .,  -->
+<!-- model <- train(mpg ~ ., -->
 <!--                data = mtcars, -->
 <!--                method = "ridge") # pode ser 'lasso' -->
 <!-- ``` -->
@@ -470,6 +514,8 @@ summary {
 <!-- predictions <- predict(model.cv, mtcars) -->
 <!-- predictions -->
 <!-- ``` -->
+</div>
+</div>
 </div>
 
 

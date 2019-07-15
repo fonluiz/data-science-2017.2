@@ -30,7 +30,7 @@ install.packages("caret")
 
 # Creating a simple model
 
-We're gonna do that by using the "train()" function. The function "train()" is a core function of caret. As its name suggests, it is used to train a model, that is, to apply an algorithm to a set of data and create a model which represents that dataset.
+We're gonna do that by using the **train()** function. The function **train()** is a core function of caret. As its name suggests, it is used to train a model, that is, to apply an algorithm to a set of data and create a model which represents that dataset.
 
 The train() function has three basic parameters:
 
@@ -38,75 +38,118 @@ The train() function has three basic parameters:
 2. Dataset
 3. Method (or algorithm)
 
-The *formula* parameter is where you specify what is your dependent variable (what you want to predict) and independent variables (features). I'll explain more about how to write your formula below. 
+The **formula** parameter is where you specify what is your dependent variable (what you want to predict) and independent variables (features). I'll explain more about how to write your formula below. 
 
-The *dataset* is your data. 
+The **dataset** parameter is your data. 
 
-In the example below I'm using the mtcars dataset
+The **method** parameter is a string specifying which classification or regression model to use.
+
+In this tutorial I'm using the mtcars dataset. It is one of the built-in R datasets. Below, there is an explanation about this dataset: 
+
+### Motor Trend Car Road Tests (mtcars)
+#### Description
+The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models).
+
+Format
+A data frame with 32 observations on 11 variables.
+
+1.	mpg	Miles/(US) gallon
+2.	cyl	Number of cylinders
+3.	disp	Displacement (cu.in.)
+4.	hp	Gross horsepower
+5.	drat	Rear axle ratio
+6.	wt	Weight (1000 lbs)
+7.	qsec	1/4 mile time
+8.	vs	V/S
+9.	am	Transmission (0 = automatic, 1 = manual)
+10.	gear	Number of forward gears
+11.	carb	Number of carburetors
+
+let's take a look on the dataframe.
 
 ```{r}
-data(mtcars)
-View(mtcars)
-?mtcars
+data(mtcars)    # Load the dataset
+head(mtcars)    
+?mtcars         # Get more information about this dataset 
+```
 
+Now, let's create regression models to predict how many miles per gallon (mpg) a car model can reach based on the other attributes.
+
+The **formula** can be written as **x ~ y, z, w** where x is the dependent variable, mpg in our case, and y, z and w are independent variables. If you want to pass all the other attributes you can write it as **x ~ .**.
+
+```{r}
 library(caret)
 
-# modelo de regressão linear simples
+# Simple linear regression model (lm means linear model)
 model <- train(mpg ~ wt,
                data = mtcars,
                method = "lm")
 
-# modelo de regressão linear múltipla
+# Multiple linear regression model
 model <- train(mpg ~ .,
                data = mtcars,
                method = "lm")
 
-# modelo utilizando regressão ridge
+# Ridge regression model
 model <- train(mpg ~ .,
                data = mtcars,
-               method = "ridge") # pode ser 'lasso'
+               method = "ridge") # Try using "lasso"
 
 ```
-<!-- # K-fold cross-validation -->
 
-<!-- O processo de reamostragem pode ser feito usando k-fold cross-validation, leave-one-out cross-validation ou bootstrapping. -->
+That's how you can use the function **train()** to create different basic models. Easy, isn't it?
 
-<!-- ```{r} -->
-<!-- fitControl <- trainControl(## 10-fold CV -->
-<!--                            method = "cv", # boot", "boot632", "cv", "repeatedcv", "LOOCV", "LGOCV" -->
-<!--                            number = 10, -->
-<!--                            ## repeated ten times -->
-<!--                            repeats = 10) -->
+# K-fold cross-validation
 
-<!-- model.cv <- train(mpg ~ .,  -->
-<!--                data = mtcars, -->
-<!--                method = "lasso", -->
-<!--                trControl = fitControl) -->
+The function train() has other optional parameters. Let's learn how to add resampling to our model by adding the parameter **trControl** (train control) to our train function.
 
-<!-- model.cv -->
-<!-- ``` -->
+The resampling process can be done by using K-fold cross-validation, leave-one-out cross-validation or bootstrapping. We are going to use 10-fold cross-validation in this example. To achieve that, we need to use another Caret function, **trainControl()**. Check the code, below.
 
-<!-- # Adicionando pre-processamento -->
+```{r}
+## 10-fold CV
+fitControl <- trainControl(method = "repeatedcv",   # other possible values: boot", "boot632", "cv", "repeatedcv", "LOOCV", "LGOCV"
+                           number = 10,     # number of folds
+                           repeats = 10)    # repeated ten times
 
-<!-- ```{r} -->
-<!-- model.cv <- train(mpg ~ .,  -->
-<!--                data = mtcars, -->
-<!--                method = "lasso", -->
-<!--                trControl = fitControl, -->
-<!--                preProcess = c('scale', 'center')) # default: sem pre-processamento -->
+model.cv <- train(mpg ~ .,
+               data = mtcars,
+               method = "lasso",            # now we're using the lasso method
+               trControl = fitControl)  
 
-<!-- # Center: subtrai a média do valor  -->
-<!-- # scale: normaliza os dados (deixa na mesma escala) -->
+model.cv
+```
 
-<!-- ?train -->
-<!-- model.cv -->
-<!-- ``` -->
+# Adding preprocessing
 
-<!-- # Encontrando parâmetros do modelo -->
+The **train()** function has another optional parameter called **preProcess**. It's used to add some pre-processing to your data.
 
-<!-- Podemos testar vários parâmetros para o modelo através da função expand.grid() -->
+In this example we're going to use the following pre-processing:
 
-<!-- O método ridge tende a aproximar os coeficientes das variáveis preditoras de 0, conforme o lambda aumenta. Isso diminui a flexibilidade do modelo, diminuindo também a variância, porém aumentando o BIAS. A ideia por trás da regressão Ridge é encontrar um lambda que gere um trade-off satisfatório entre BIAS e Variância. -->
+1. center data (i.e. compute the mean for each column and subtracts it from each respective value);
+2. scale data (i.e. put all data in the same scale, e.g. from  0 up to 1)
+
+However, there are more pre-processing possibilities such as "BoxCox", "YeoJohnson", "expoTrans", "range", "knnImpute", "bagImpute", "medianImpute", "pca", "ica" and "spatialSign".
+
+```{r}
+model.cv <- train(mpg ~ .,
+               data = mtcars,
+               method = "lasso",
+               trControl = fitControl,
+               preProcess = c('scale', 'center')) # default: no pre-processing
+
+?train
+model.cv
+```
+
+# Finding the model hyper-parameters
+
+We can find the best hyper-parameters for our model by using the **tuneGrid** parameter. This parameter receives A data frame with possible tuning values. The columns are named the same as the tuning parameters. 
+
+To generate the possible values, I am going to use the **expand.grid** from the base library. To explain the use of **tuneGrid** I'm gonna use the ridge regression method. 
+
+The ridge method shrinks the coefficients of the predictor variables towards 0.
+
+O método ridge tende a aproximar os coeficientes das variáveis preditoras de 0, conforme o lambda aumenta. Isso diminui a flexibilidade do modelo, diminuindo também a variância, porém aumentando o BIAS. A ideia por trás da regressão Ridge é encontrar um lambda que gere um trade-off satisfatório entre BIAS e Variância.
 
 <!-- ```{r} -->
 <!-- lambdaGrid <- expand.grid(lambda = 10^seq(10, -2, length=100)) -->
