@@ -147,23 +147,23 @@ We can find the best hyper-parameters for our model by using the **tuneGrid** pa
 
 To generate the possible values, I am going to use the **expand.grid** from the base library. To explain the use of **tuneGrid** I'm gonna use the ridge regression method. 
 
-The ridge method shrinks the coefficients of the predictor variables towards 0.
+##### Short explanation
+The ridge method shrinks the coefficients of the predictor variables towards 0, as lambda grows. That shrinking effect decreases the model flexibility, decreasing its variance as well, but increasing bias. The ideia of Ridge  regression is to find a value for lambda that is a satisfying trade-off  between bias and variance.
 
-O método ridge tende a aproximar os coeficientes das variáveis preditoras de 0, conforme o lambda aumenta. Isso diminui a flexibilidade do modelo, diminuindo também a variância, porém aumentando o BIAS. A ideia por trás da regressão Ridge é encontrar um lambda que gere um trade-off satisfatório entre BIAS e Variância.
+```{r}
+# Here I generate a dataframe with a column named lambda with 100 values that goes from 10^10 to 10^-2
+lambdaGrid <- expand.grid(lambda = 10^seq(10, -2, length=100))
 
-<!-- ```{r} -->
-<!-- lambdaGrid <- expand.grid(lambda = 10^seq(10, -2, length=100)) -->
+model.cv <- train(mpg ~ .,
+               data = mtcars,
+               method = "ridge",
+               trControl = fitControl,
+               preProcess = c('scale', 'center'),
+               tuneGrid = lambdaGrid,                  # Test all the lambda values in the lambdaGrid dataframe
+               na.action = na.omit)                    # Ignore NA values
 
-<!-- model.cv <- train(mpg ~ .,  -->
-<!--                data = mtcars, -->
-<!--                method = "ridge", -->
-<!--                trControl = fitControl, -->
-<!--                preProcess = c('scale', 'center'), -->
-<!--                tuneGrid = lambdaGrid, -->
-<!--                na.action = na.omit)   #ignora os NAs -->
-
-<!-- model.cv -->
-<!-- ``` -->
+model.cv
+```
 
 <!-- Podemos utilizar uma busca aleatória de parâmetros com search = "random" no trainControl. -->
 
